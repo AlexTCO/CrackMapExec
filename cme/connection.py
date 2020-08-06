@@ -79,11 +79,11 @@ class connection(object):
             self.enum_host_info()
             self.proto_logger()
             self.print_host_info()
-            self.login()
-            if hasattr(self.args, 'module') and self.args.module:
-                self.call_modules()
-            else:
-                self.call_cmd_args()
+            if self.login():
+                if hasattr(self.args, 'module') and self.args.module:
+                    self.call_modules()
+                else:
+                    self.call_cmd_args()
 
     def call_cmd_args(self):
         for k, v in vars(self.args).items():
@@ -196,9 +196,9 @@ class connection(object):
 
                                     elif not isinstance(ntlm_hash, str) and isfile(ntlm_hash.name) and self.args.no_bruteforce == True:
                                         user.seek(0)
-                                        for usr, f_pass in zip(user, ntlm_hash):
+                                        for usr, f_hash in zip(user, ntlm_hash):
                                             if not self.over_fail_limit(usr.strip()):
-                                                if self.plaintext_login(self.domain, usr.strip(), f_hash.strip()): return True
+                                                if self.hash_login(self.domain, usr.strip(), f_hash.strip()): return True
 
                         elif self.args.password:
                             with sem:
@@ -227,7 +227,7 @@ class connection(object):
                                                     if self.plaintext_login(self.domain, usr.strip(), f_pass.strip()): return True
                                                 else:
                                                     if self.plaintext_login(usr.strip(), f_pass.strip()): return True
-
+                    user.seek(0) # added june 2020, may break everything but solve this issue cme smb file -u file -p file
                 elif isinstance(user, str):
                         if hasattr(self.args, 'hash') and self.args.hash:
                             with sem:
